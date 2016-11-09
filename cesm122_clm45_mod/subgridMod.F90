@@ -13,6 +13,10 @@ module subgridMod
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
 
+!NMS
+  use clm_varctl  , only : iulog
+!NMS
+
   implicit none
   private	
   save
@@ -136,16 +140,19 @@ contains
     else
        do m = 1, maxpatch_pft            
           if (wtxy(nw,m) > 0.0_r8) then
+!NMS             
+             icols = icols + 1   
+!NMS
              npfts_per_lunit = npfts_per_lunit + 1
              wtlunit = wtlunit + wtxy(nw,m)
           end if
        end do
     end if
     if (npfts_per_lunit > 0) then ! true even when only crops are present
-       if (allocate_all_vegpfts) npfts_per_lunit = numpft+1
-       if (allocate_all_vegpfts .and. create_crop_landunit) npfts_per_lunit = numpft+1-numcft
+!       if (allocate_all_vegpfts) npfts_per_lunit = numpft+1
+!       if (allocate_all_vegpfts .and. create_crop_landunit) npfts_per_lunit = numpft+1-numcft
        ilunits = ilunits + 1
-       icols = icols + 1  
+!       icols = icols + 1  
     end if
     ipfts = ipfts + npfts_per_lunit
     if (present(nveg )) nveg  = npfts_per_lunit

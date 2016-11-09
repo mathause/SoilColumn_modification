@@ -603,10 +603,12 @@ end subroutine clm_ptrs_check
        ! Set pointers into derived types for this module
 
 
-       ncols = 1
-       
+!NMS
+!      ncols = 1
+       ncols = npfts + 1
        li = li + 1
-       ci = ci + 1
+!      ci = ci + 1
+!NMS
 
        if (setdata) then
           ! Set landunit properties
@@ -619,86 +621,110 @@ end subroutine clm_ptrs_check
           lun%wtgcell(li) = wtlunit2gcell
 
           ! Set column properties for this landunit (only one column on landunit)
-          col%itype(ci)    = 1
+          ! col%itype(ci)    = 1
       
-          col%gridcell (ci) = gi
-          col%wtgcell(ci) = wtlunit2gcell
-          col%landunit (ci) = li
-          col%wtlunit(ci) = 1.0_r8
+          ! col%gridcell (ci) = gi
+          ! col%wtgcell(ci) = wtlunit2gcell
+          ! col%landunit (ci) = li
+          ! col%wtlunit(ci) = 1.0_r8
        endif ! setdata
+
+!NMS
+      do m =1,numpft+1
+         if (setdata) then
+          if (wtxy(nw,m) > 0.0_r8) then
+            pi = pi + 1
+            ci = ci + 1
+            pft%itype(pi)  = m - 1
+            col%itype(ci)  = 1
+            pft%mxy(pi)    = m
+            pft%column(pi) = ci
+!                write(iulog,*) 'Check column pt ',pi,ci,pft%column(pi)
+            pft%gridcell(pi) = gi
+            col%gridcell(ci) = gi
+            pft%landunit(pi) = li
+            col%landunit(ci) = li
+            pft%wtgcell(pi) = wtxy(nw,m)
+            col%wtgcell(ci) = wtxy(nw,m)
+            pft%wtlunit(pi) = wtxy(nw,m) / wtlunit2gcell
+            col%wtlunit(ci) = wtxy(nw,m) / wtlunit2gcell
+            pft%wtcol(pi) = 1._r8
+          end if
+         end if ! setdata
+      end do
 
        ! Set pft properties for this landunit
 
-       if (create_crop_landunit) then
-          do n = 1,numpft+1-numcft
-             pi = pi + 1
-             pitype = n-1
-             if (setdata) then
-                pft%mxy(pi)      = n
-                pft%itype(pi)    = pitype
-                pft%gridcell(pi) = gi
-                pft%landunit(pi) = li
-                pft%column (pi) = ci
+       ! if (create_crop_landunit) then
+       !    do n = 1,numpft+1-numcft
+       !       pi = pi + 1
+       !       pitype = n-1
+       !       if (setdata) then
+       !          pft%mxy(pi)      = n
+       !          pft%itype(pi)    = pitype
+       !          pft%gridcell(pi) = gi
+       !          pft%landunit(pi) = li
+       !          pft%column (pi) = ci
 
-                if (wtlunit2gcell > 0._r8) then
-                   pft%wtgcell(pi) = 0.0_r8
-                   pft%wtlunit(pi) = 0.0_r8
-                   pft%wtcol(pi) = 0.0_r8
-                   do m = 1,maxpatch_pft
-                      if (vegxy(nw,m) == pitype) then
-                         pft%wtgcell(pi)  = pft%wtgcell(pi) + wtxy(nw,m)
-                         pft%wtlunit(pi)  = pft%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
-                         pft%wtcol(pi)  = pft%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
-                      end if
-                   end do
-                else  ! wtlunit2gcell == 0._r8
-                   ! TODO WJS: Temporarily setting this to equal weighting for all
-                   ! pfts. In the future, we could potentially get some info about this
-                   ! from the surface dataset, if it is changed to give pct_pft as % of
-                   ! the pft on the landunit
-                   pft%wtgcell(pi) = 0._r8
-                   pft%wtlunit(pi) = 1._r8 / (numpft+1-numcft)
-                   pft%wtcol(pi)   = 1._r8 / (numpft+1-numcft)
-                end if
-             endif ! setdata
-          end do
-       else if (allocate_all_vegpfts) then
-          do n = 1,numpft+1
-             pi = pi + 1
-             pitype = n-1
-             if (setdata) then
-                pft%mxy(pi)      = n
-                pft%itype(pi)    = pitype
-                pft%gridcell(pi) = gi
-                pft%landunit(pi) = li
-                pft%column (pi) = ci
+       !          if (wtlunit2gcell > 0._r8) then
+       !             pft%wtgcell(pi) = 0.0_r8
+       !             pft%wtlunit(pi) = 0.0_r8
+       !             pft%wtcol(pi) = 0.0_r8
+       !             do m = 1,maxpatch_pft
+       !                if (vegxy(nw,m) == pitype) then
+       !                   pft%wtgcell(pi)  = pft%wtgcell(pi) + wtxy(nw,m)
+       !                   pft%wtlunit(pi)  = pft%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
+       !                   pft%wtcol(pi)  = pft%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
+       !                end if
+       !             end do
+       !          else  ! wtlunit2gcell == 0._r8
+       !             ! TODO WJS: Temporarily setting this to equal weighting for all
+       !             ! pfts. In the future, we could potentially get some info about this
+       !             ! from the surface dataset, if it is changed to give pct_pft as % of
+       !             ! the pft on the landunit
+       !             pft%wtgcell(pi) = 0._r8
+       !             pft%wtlunit(pi) = 1._r8 / (numpft+1-numcft)
+       !             pft%wtcol(pi)   = 1._r8 / (numpft+1-numcft)
+       !          end if
+       !       endif ! setdata
+       !    end do
+       ! else if (allocate_all_vegpfts) then
+       !    do n = 1,numpft+1
+       !       pi = pi + 1
+       !       pitype = n-1
+       !       if (setdata) then
+       !          pft%mxy(pi)      = n
+       !          pft%itype(pi)    = pitype
+       !          pft%gridcell(pi) = gi
+       !          pft%landunit(pi) = li
+       !          pft%column (pi) = ci
 
-                if (wtlunit2gcell > 0._r8) then
-                   pft%wtgcell(pi) = 0.0_r8
-                   pft%wtlunit(pi) = 0.0_r8
-                   pft%wtcol(pi) = 0.0_r8
-                   do m = 1,maxpatch_pft
-                      if (vegxy(nw,m) == pitype) then
-                         pft%wtgcell(pi)  = pft%wtgcell(pi) + wtxy(nw,m)
-                         pft%wtlunit(pi)  = pft%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
-                         pft%wtcol(pi)  = pft%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
-                      end if
-                   end do
-                else  ! wtlunit2gcell == 0._r8
-                   ! TODO WJS: Temporarily setting this to equal weighting for all
-                   ! pfts. In the future, we could potentially get some info about this
-                   ! from the surface dataset, if it is changed to give pct_pft as % of
-                   ! the pft on the landunit
-                   pft%wtgcell(pi) = 0._r8
-                   pft%wtlunit(pi) = 1._r8 / (numpft+1)
-                   pft%wtcol(pi)   = 1._r8 / (numpft+1)
-                end if
-             endif ! setdata
-          end do
-       else
-          write(iulog,*) 'allocate_all_vegpfts=false is no longer supported'
-          call endrun()
-       end if
+       !          if (wtlunit2gcell > 0._r8) then
+       !             pft%wtgcell(pi) = 0.0_r8
+       !             pft%wtlunit(pi) = 0.0_r8
+       !             pft%wtcol(pi) = 0.0_r8
+       !             do m = 1,maxpatch_pft
+       !                if (vegxy(nw,m) == pitype) then
+       !                   pft%wtgcell(pi)  = pft%wtgcell(pi) + wtxy(nw,m)
+       !                   pft%wtlunit(pi)  = pft%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
+       !                   pft%wtcol(pi)  = pft%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
+       !                end if
+       !             end do
+       !          else  ! wtlunit2gcell == 0._r8
+       !             ! TODO WJS: Temporarily setting this to equal weighting for all
+       !             ! pfts. In the future, we could potentially get some info about this
+       !             ! from the surface dataset, if it is changed to give pct_pft as % of
+       !             ! the pft on the landunit
+       !             pft%wtgcell(pi) = 0._r8
+       !             pft%wtlunit(pi) = 1._r8 / (numpft+1)
+       !             pft%wtcol(pi)   = 1._r8 / (numpft+1)
+       !          end if
+       !       endif ! setdata
+       !    end do
+       ! else
+       !    write(iulog,*) 'allocate_all_vegpfts=false is no longer supported'
+       !    call endrun()
+       ! end if
 
     end if
 
